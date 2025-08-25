@@ -1,54 +1,73 @@
-/* General Body and Font Styles */
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: #f4f4f5;
-}
+/* ... (keep all existing styles) ... */
 
-/* Main App Container */
-.app-container {
-  min-height: 100vh;
+/* Form Styling */
+.travel-form {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 1rem;
 }
 
-.main-content {
+.prompt-textarea {
   width: 100%;
-  max-width: 800px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 24px;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
 }
 
-.header-title {
-  font-size: 2.5rem;
-  font-weight: bold;
+.prompt-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+}
+
+.generate-button {
+  margin-top: 1rem;
+  background-color: #2563eb;
+  color: white;
+  padding: 12px 0;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.generate-button:hover {
+  background-color: #1d4ed8;
+}
+
+.generate-button:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+/* Response and Error Styling */
+.error-message {
+  color: #ef4444;
+  margin-top: 1rem;
   text-align: center;
-  color: #1f2937;
+}
+
+.response-container {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background-color: #f9fafb;
+}
+
+.response-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
   margin-bottom: 0.5rem;
 }
 
-.header-subtitle {
-  text-align: center;
-  color: #6b7280;
-  margin-bottom: 2rem;
-}
-
-/* Placeholder for future content */
-.placeholder {
-    text-align: center;
-    padding: 2rem;
-    border: 2px dashed #d1d5db;
-    border-radius: 8px;
-}
-
-.placeholder-text {
-    color: #9ca3af;
+.response-text {
+  color: #4b5563;
+  white-space: pre-wrap; /* Preserves line breaks from the AI */
 }
