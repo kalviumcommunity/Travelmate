@@ -1,4 +1,26 @@
-/* ... (keep all existing styles) ... */
+/* ... (keep all your global/reset styles here if any) ... */
+
+/* Slider Controls */
+.controls-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem; /* Added margin for spacing */
+}
+
+.slider-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.slider-input {
+  width: 100%;
+  cursor: pointer;
+}
 
 /* Structured Result Styling */
 .results-grid {

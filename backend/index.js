@@ -30,17 +30,19 @@ app.get("/", (req, res) => {
 // API endpoint
 app.post("/api/generate", async (req, res) => {
   try {
-    const { prompt: userPrompt } = req.body;
+    // --- MODIFIED: Destructure temperature too ---
+    const { prompt: userPrompt, temperature } = req.body;
 
     if (!userPrompt) {
       return res.status(400).json({ error: "Prompt is required" });
     }
 
-    // 1. Configure model with JSON output
+    // 1. Configure model with JSON output + temperature
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
       generationConfig: {
         responseMimeType: "application/json", // Force JSON output
+        temperature: temperature || 0.7,      // Default 0.7 if not provided
       },
     });
 
