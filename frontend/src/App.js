@@ -6,6 +6,9 @@ function App() {
   const [response, setResponse] = useState(null); // can be object OR string
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // --- NEW: Add state for Temperature ---
+  const [temperature, setTemperature] = useState(0.7);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,7 +20,8 @@ function App() {
       const res = await fetch('http://localhost:8000/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+        // send both prompt and temperature
+        body: JSON.stringify({ prompt, temperature }),
       });
 
       const data = await res.json();
@@ -51,6 +55,26 @@ function App() {
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="e.g., Suggest a 5-day trip to Paris for a student on a low budget."
           />
+
+          {/* --- NEW: Add the slider UI --- */}
+          <div className="controls-grid">
+            <div>
+              <label htmlFor="temp" className="slider-label">
+                Creativity (Temperature): {temperature}
+              </label>
+              <input 
+                type="range" 
+                id="temp" 
+                min="0" 
+                max="1" 
+                step="0.1" 
+                value={temperature} 
+                onChange={(e) => setTemperature(parseFloat(e.target.value))} 
+                className="slider-input" 
+              />
+            </div>
+          </div>
+
           <button
             type="submit"
             className="generate-button"
