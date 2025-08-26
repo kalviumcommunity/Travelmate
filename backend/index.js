@@ -58,9 +58,10 @@ app.post("/api/generate", async (req, res) => {
       Do not include any extra text, only return JSON.
     `;
 
-    // 3. Start chat with a one-shot example + schema instruction
+    // 3. Start chat with few-shot examples (family, budget, food trips)
     const chat = model.startChat({
       history: [
+        // --- Example 1: Family Trip ---
         {
           role: "user",
           parts: [
@@ -76,6 +77,34 @@ User Request: "Suggest 2 attractions in London for a family."`,
           parts: [
             {
               text: `{"places": ["The British Museum", "Hyde Park"], "transport": "Use the Tube (subway) with an Oyster card.", "food": ["Fish and Chips from a local pub", "Afternoon tea"], "stay": "Consider family-friendly hotels in the South Kensington area."}`,
+            },
+          ],
+        },
+
+        // --- Example 2: Budget Trip ---
+        {
+          role: "user",
+          parts: [{ text: "I want to visit Rome on a tight budget. Give me one idea." }],
+        },
+        {
+          role: "model",
+          parts: [
+            {
+              text: `{"places": ["Pantheon"], "transport": "Walking is the best and cheapest way to see the city center.", "food": ["Pizza al taglio (pizza by the slice)"], "stay": "Look for a bed in a hostel near Termini Station."}`,
+            },
+          ],
+        },
+
+        // --- Example 3: Food-Focused Trip ---
+        {
+          role: "user",
+          parts: [{ text: "I'm going to Tokyo and I only care about food. Suggest two things." }],
+        },
+        {
+          role: "model",
+          parts: [
+            {
+              text: `{"places": ["Tsukiji Outer Market", "Omoide Yokocho (Piss Alley)"], "transport": "Use the JR Yamanote Line and Tokyo Metro.", "food": ["Fresh sushi for breakfast", "Yakitori (grilled skewers)"], "stay": "Find a hotel in Shinjuku or Shibuya for easy access to food districts."}`,
             },
           ],
         },
