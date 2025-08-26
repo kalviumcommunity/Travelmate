@@ -3,7 +3,7 @@ import './App.css';
 
 function App() {
   const [prompt, setPrompt] = useState('');
-  const [response, setResponse] = useState('');
+  const [response, setResponse] = useState(null); // can be object OR string
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -11,22 +11,20 @@ function App() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setResponse('');
+    setResponse(null);
 
     try {
       const res = await fetch('http://localhost:8000/api/generate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt }),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        throw new Error('Failed to fetch from the API');
+        throw new Error(data.error || 'Failed to fetch from the API');
       }
 
-      const data = await res.json();
       setResponse(data.response);
     } catch (err) {
       setError(err.message);
@@ -34,6 +32,11 @@ function App() {
       setLoading(false);
     }
   };
+
+  // helper check → is structured?
+  const isStructured = (res) =>
+    res &&
+    (res.places || res.transport || res.food || res.stay);
 
   return (
     <div className="app-container">
@@ -67,7 +70,46 @@ function App() {
           </div>
         )}
 
-        {response && (
+        {/* --- New Structured Display (if response is object) --- */}
+        {response && isStructured(response) && (
+          <div className="results-grid">
+            {response.places && (
+              <div className="result-card">
+                <h3>📍 Places to Visit</h3>
+                <ul>
+                  {response.places.map((place, index) => (
+                    <li key={index}>{place}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {response.transport && (
+              <div className="result-card">
+                <h3>🚗 Transportation</h3>
+                <p>{response.transport}</p>
+              </div>
+            )}
+            {response.food && (
+              <div className="result-card">
+                <h3>🍔 Food & Cuisine</h3>
+                <ul>
+                  {response.food.map((item, index) => (
+                    <li key={index}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {response.stay && (
+              <div className="result-card">
+                <h3>🏨 Accommodation</h3>
+                <p>{response.stay}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* --- Simple Text Response (fallback if response is string) --- */}
+        {response && !isStructured(response) && (
           <div className="response-container">
             <h2 className="response-title">Your Travel Plan:</h2>
             <p className="response-text">{response}</p>
