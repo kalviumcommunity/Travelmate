@@ -27,98 +27,93 @@ app.get("/", (req, res) => {
   res.send("✅ Backend is running");
 });
 
+// --- Few-shot history examples for consistent JSON formatting ---
+const systemPrompt = `
+  You are TravelMate, an expert travel planner. 
+  Based on the user's request, generate a structured travel plan.
+  Your output MUST be a JSON object that strictly follows this schema:
+  {
+    "places": ["string", "string", ...], 
+    "transport": "string", 
+    "food": ["string", "string", ...], 
+    "stay": "string"
+  }
+  Do not include any extra text, only return JSON.
+`;
+
+const multiShotHistory = [
+  // Example 1: Family Trip
+  {
+    role: "user",
+    parts: [{ text: `${systemPrompt}\n\nUser Request: "Suggest 2 attractions in London for a family."` }],
+  },
+  {
+    role: "model",
+    parts: [
+      {
+        text: `{"places": ["The British Museum", "Hyde Park"], "transport": "Use the Tube (subway) with an Oyster card.", "food": ["Fish and Chips from a local pub", "Afternoon tea"], "stay": "Consider family-friendly hotels in the South Kensington area."}`,
+      },
+    ],
+  },
+
+  // Example 2: Budget Trip
+  {
+    role: "user",
+    parts: [{ text: "I want to visit Rome on a tight budget. Give me one idea." }],
+  },
+  {
+    role: "model",
+    parts: [
+      {
+        text: `{"places": ["Pantheon"], "transport": "Walking is the best and cheapest way to see the city center.", "food": ["Pizza al taglio (pizza by the slice)"], "stay": "Look for a bed in a hostel near Termini Station."}`,
+      },
+    ],
+  },
+
+  // Example 3: Food-Focused Trip
+  {
+    role: "user",
+    parts: [{ text: "I'm going to Tokyo and I only care about food. Suggest two things." }],
+  },
+  {
+    role: "model",
+    parts: [
+      {
+        text: `{"places": ["Tsukiji Outer Market", "Omoide Yokocho (Piss Alley)"], "transport": "Use the JR Yamanote Line and Tokyo Metro.", "food": ["Fresh sushi for breakfast", "Yakitori (grilled skewers)"], "stay": "Find a hotel in Shinjuku or Shibuya for easy access to food districts."}`,
+      },
+    ],
+  },
+];
+
 // API endpoint
 app.post("/api/generate", async (req, res) => {
   try {
-    // --- MODIFIED: Destructure temperature too ---
-    const { prompt: userPrompt, temperature } = req.body;
+    // Destructure values from frontend
+    const { prompt: userPrompt, temperature, topP } = req.body;
 
     if (!userPrompt) {
       return res.status(400).json({ error: "Prompt is required" });
     }
 
-    // 1. Configure model with JSON output + temperature
+    // Configure model with JSON output + sliders
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
       generationConfig: {
         responseMimeType: "application/json", // Force JSON output
-        temperature: temperature || 0.7,      // Default 0.7 if not provided
+        temperature: temperature ?? 0.7,       // default if not passed
+        topP: topP ?? 1.0,                     // default if not passed
       },
     });
 
-    // 2. Define schema/system prompt
-    const systemPrompt = `
-      You are TravelMate, an expert travel planner. 
-      Based on the user's request, generate a structured travel plan.
-      Your output MUST be a JSON object that strictly follows this schema:
-      {
-        "places": ["string", "string", ...], 
-        "transport": "string", 
-        "food": ["string", "string", ...], 
-        "stay": "string"
-      }
-      Do not include any extra text, only return JSON.
-    `;
+    // Start chat with examples
+    const chat = model.startChat({ history: multiShotHistory });
 
-    // 3. Start chat with few-shot examples (family, budget, food trips)
-    const chat = model.startChat({
-      history: [
-        // --- Example 1: Family Trip ---
-        {
-          role: "user",
-          parts: [
-            {
-              text: `${systemPrompt}
-
-User Request: "Suggest 2 attractions in London for a family."`,
-            },
-          ],
-        },
-        {
-          role: "model",
-          parts: [
-            {
-              text: `{"places": ["The British Museum", "Hyde Park"], "transport": "Use the Tube (subway) with an Oyster card.", "food": ["Fish and Chips from a local pub", "Afternoon tea"], "stay": "Consider family-friendly hotels in the South Kensington area."}`,
-            },
-          ],
-        },
-
-        // --- Example 2: Budget Trip ---
-        {
-          role: "user",
-          parts: [{ text: "I want to visit Rome on a tight budget. Give me one idea." }],
-        },
-        {
-          role: "model",
-          parts: [
-            {
-              text: `{"places": ["Pantheon"], "transport": "Walking is the best and cheapest way to see the city center.", "food": ["Pizza al taglio (pizza by the slice)"], "stay": "Look for a bed in a hostel near Termini Station."}`,
-            },
-          ],
-        },
-
-        // --- Example 3: Food-Focused Trip ---
-        {
-          role: "user",
-          parts: [{ text: "I'm going to Tokyo and I only care about food. Suggest two things." }],
-        },
-        {
-          role: "model",
-          parts: [
-            {
-              text: `{"places": ["Tsukiji Outer Market", "Omoide Yokocho (Piss Alley)"], "transport": "Use the JR Yamanote Line and Tokyo Metro.", "food": ["Fresh sushi for breakfast", "Yakitori (grilled skewers)"], "stay": "Find a hotel in Shinjuku or Shibuya for easy access to food districts."}`,
-            },
-          ],
-        },
-      ],
-    });
-
-    // 4. Send the real user’s prompt
+    // Send user prompt
     const result = await chat.sendMessage(userPrompt);
     const response = await result.response;
     const text = response.text();
 
-    // 5. Parse response safely
+    // Try to parse JSON safely
     let parsedJson;
     try {
       parsedJson = JSON.parse(text);
@@ -127,7 +122,7 @@ User Request: "Suggest 2 attractions in London for a family."`,
       return res.status(500).json({ error: "AI response was not valid JSON." });
     }
 
-    // 6. Send structured response
+    // Send structured response
     res.json({ response: parsedJson });
   } catch (error) {
     console.error("❌ Error generating content:", error);

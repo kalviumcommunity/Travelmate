@@ -6,9 +6,10 @@ function App() {
   const [response, setResponse] = useState(null); // can be object OR string
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
-  // --- NEW: Add state for Temperature ---
+
+  // --- NEW: Sliders state ---
   const [temperature, setTemperature] = useState(0.7);
+  const [topP, setTopP] = useState(1.0);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,8 +21,8 @@ function App() {
       const res = await fetch('http://localhost:8000/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // send both prompt and temperature
-        body: JSON.stringify({ prompt, temperature }),
+        // send prompt, temperature, and topP
+        body: JSON.stringify({ prompt, temperature, topP }),
       });
 
       const data = await res.json();
@@ -56,21 +57,37 @@ function App() {
             placeholder="e.g., Suggest a 5-day trip to Paris for a student on a low budget."
           />
 
-          {/* --- NEW: Add the slider UI --- */}
+          {/* --- Controls for sliders --- */}
           <div className="controls-grid">
             <div>
               <label htmlFor="temp" className="slider-label">
                 Creativity (Temperature): {temperature}
               </label>
-              <input 
-                type="range" 
-                id="temp" 
-                min="0" 
-                max="1" 
-                step="0.1" 
-                value={temperature} 
-                onChange={(e) => setTemperature(parseFloat(e.target.value))} 
-                className="slider-input" 
+              <input
+                type="range"
+                id="temp"
+                min="0"
+                max="1"
+                step="0.1"
+                value={temperature}
+                onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                className="slider-input"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="topp" className="slider-label">
+                Diversity (Top P): {topP}
+              </label>
+              <input
+                type="range"
+                id="topp"
+                min="0"
+                max="1"
+                step="0.1"
+                value={topP}
+                onChange={(e) => setTopP(parseFloat(e.target.value))}
+                className="slider-input"
               />
             </div>
           </div>
@@ -94,7 +111,7 @@ function App() {
           </div>
         )}
 
-        {/* --- New Structured Display (if response is object) --- */}
+        {/* --- Structured Display --- */}
         {response && isStructured(response) && (
           <div className="results-grid">
             {response.places && (
@@ -132,7 +149,7 @@ function App() {
           </div>
         )}
 
-        {/* --- Simple Text Response (fallback if response is string) --- */}
+        {/* --- Fallback Text Response --- */}
         {response && !isStructured(response) && (
           <div className="response-container">
             <h2 className="response-title">Your Travel Plan:</h2>
