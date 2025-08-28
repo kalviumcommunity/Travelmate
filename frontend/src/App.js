@@ -7,9 +7,12 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // --- NEW: Sliders state ---
+  // Sliders state
   const [temperature, setTemperature] = useState(0.7);
   const [topP, setTopP] = useState(1.0);
+
+  // NEW: Foodie focus checkbox
+  const [isFoodie, setIsFoodie] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,8 +24,8 @@ function App() {
       const res = await fetch('http://localhost:8000/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // send prompt, temperature, and topP
-        body: JSON.stringify({ prompt, temperature, topP }),
+        // send all states
+        body: JSON.stringify({ prompt, temperature, topP, isFoodie }),
       });
 
       const data = await res.json();
@@ -57,7 +60,21 @@ function App() {
             placeholder="e.g., Suggest a 5-day trip to Paris for a student on a low budget."
           />
 
-          {/* --- Controls for sliders --- */}
+          {/* NEW: Foodie Checkbox */}
+          <div className="checkbox-container">
+            <input
+              type="checkbox"
+              id="foodie-focus"
+              checked={isFoodie}
+              onChange={(e) => setIsFoodie(e.target.checked)}
+              className="focus-checkbox"
+            />
+            <label htmlFor="foodie-focus" className="checkbox-label">
+              Extra Focus on Food & Cuisine
+            </label>
+          </div>
+
+          {/* Controls for sliders */}
           <div className="controls-grid">
             <div>
               <label htmlFor="temp" className="slider-label">
@@ -111,7 +128,7 @@ function App() {
           </div>
         )}
 
-        {/* --- Structured Display --- */}
+        {/* Structured Display */}
         {response && isStructured(response) && (
           <div className="results-grid">
             {response.places && (
@@ -149,7 +166,7 @@ function App() {
           </div>
         )}
 
-        {/* --- Fallback Text Response --- */}
+        {/* Fallback Text Response */}
         {response && !isStructured(response) && (
           <div className="response-container">
             <h2 className="response-title">Your Travel Plan:</h2>

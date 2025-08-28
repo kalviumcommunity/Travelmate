@@ -32,6 +32,28 @@
 }
 
 /* =========================
+   Checkbox Styling
+========================= */
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.focus-checkbox {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.5rem;
+  cursor: pointer;
+}
+
+.checkbox-label {
+  font-size: 0.9rem;
+  color: #374151;
+  cursor: pointer;
+}
+
+/* =========================
    Structured Results
 ========================= */
 .results-grid {

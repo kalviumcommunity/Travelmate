@@ -27,7 +27,7 @@ app.get("/", (req, res) => {
   res.send("✅ Backend is running");
 });
 
-// --- Few-shot history examples for consistent JSON formatting ---
+// --- System Prompt ---
 const systemPrompt = `
   You are TravelMate, an expert travel planner. 
   Based on the user's request, generate a structured travel plan.
@@ -41,11 +41,16 @@ const systemPrompt = `
   Do not include any extra text, only return JSON.
 `;
 
+// --- Few-shot history examples ---
 const multiShotHistory = [
   // Example 1: Family Trip
   {
     role: "user",
-    parts: [{ text: `${systemPrompt}\n\nUser Request: "Suggest 2 attractions in London for a family."` }],
+    parts: [
+      {
+        text: `${systemPrompt}\n\nUser Request: "Suggest 2 attractions in London for a family."`,
+      },
+    ],
   },
   {
     role: "model",
@@ -85,35 +90,43 @@ const multiShotHistory = [
   },
 ];
 
-// API endpoint
+// --- API Endpoint ---
 app.post("/api/generate", async (req, res) => {
   try {
     // Destructure values from frontend
-    const { prompt: userPrompt, temperature, topP } = req.body;
+    const { prompt: userPrompt, temperature, topP, isFoodie } = req.body;
 
     if (!userPrompt) {
       return res.status(400).json({ error: "Prompt is required" });
     }
 
-    // Configure model with JSON output + sliders
+    // --- Dynamic Prompt Modification ---
+    let finalUserPrompt = userPrompt;
+    if (isFoodie) {
+      finalUserPrompt =
+        "IMPORTANT: Prioritize unique and local culinary experiences in your recommendations. The food suggestions should be the most detailed part of the response. " +
+        userPrompt;
+    }
+
+    // Configure model
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
       generationConfig: {
-        responseMimeType: "application/json", // Force JSON output
-        temperature: temperature ?? 0.7,       // default if not passed
-        topP: topP ?? 1.0,                     // default if not passed
+        responseMimeType: "application/json", // enforce JSON output
+        temperature: temperature ?? 0.7,
+        topP: topP ?? 1.0,
       },
     });
 
-    // Start chat with examples
+    // Start chat with history
     const chat = model.startChat({ history: multiShotHistory });
 
-    // Send user prompt
-    const result = await chat.sendMessage(userPrompt);
+    // Send final user prompt
+    const result = await chat.sendMessage(finalUserPrompt);
     const response = await result.response;
     const text = response.text();
 
-    // Try to parse JSON safely
+    // Parse JSON safely
     let parsedJson;
     try {
       parsedJson = JSON.parse(text);
@@ -122,7 +135,7 @@ app.post("/api/generate", async (req, res) => {
       return res.status(500).json({ error: "AI response was not valid JSON." });
     }
 
-    // Send structured response
+    // Success
     res.json({ response: parsedJson });
   } catch (error) {
     console.error("❌ Error generating content:", error);
@@ -130,7 +143,7 @@ app.post("/api/generate", async (req, res) => {
   }
 });
 
-// Start server
+// --- Start server ---
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
